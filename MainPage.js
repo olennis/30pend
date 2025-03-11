@@ -46,6 +46,9 @@ const MainPage = () => {
   const isCurrentMonth =
     currentMonthDate.getMonth() === today.getMonth() &&
     currentMonthDate.getFullYear() === today.getFullYear();
+  const disablePrevious =
+    currentMonthDate.getFullYear() === today.getFullYear() &&
+    currentMonthDate.getMonth() === 0;
 
   const getCurrentMonthExpense = async () => {
     try {
@@ -125,8 +128,14 @@ const MainPage = () => {
     <View style={styles.container}>
       <View style={styles.summaryCard}>
         <View style={styles.summaryHeader}>
-          <TouchableOpacity onPress={handlePreviousMonth}>
-            <ChevronLeft size={24} color="#2563eb" />
+          <TouchableOpacity
+            onPress={handlePreviousMonth}
+            disabled={disablePrevious}
+          >
+            <ChevronLeft
+              size={24}
+              color={disablePrevious ? "#d1d5db" : "#2563eb"}
+            />
           </TouchableOpacity>
           <Text style={styles.summaryTitle}>
             {currentMonthDate.getMonth() + 1}월 총 지출
@@ -138,8 +147,10 @@ const MainPage = () => {
             />
           </TouchableOpacity>
         </View>
+      </View>
+      <View style={styles.summaryCard}>
         <Text style={styles.summaryAmount}>
-          {totalExpense.toLocaleString()}원
+          {totalExpense.toLocaleString()}₩
         </Text>
       </View>
       <View style={styles.inputCard}>
@@ -229,7 +240,7 @@ const MainPage = () => {
                     </View>
                   </View>
                   <Text style={styles.expenseAmount}>
-                    {item.amount.toLocaleString()}원
+                    {item.amount.toLocaleString()}₩
                   </Text>
                 </View>
               </Swipeable>
@@ -270,7 +281,7 @@ const styles = StyleSheet.create({
   },
   monthChangeText: { color: "#2563eb", fontSize: 14 },
   summaryTitle: { fontSize: 20, color: "#6b7280" },
-  summaryAmount: { fontSize: 24, fontWeight: "bold", color: "#1f2937" },
+  summaryAmount: { fontSize: 36, fontWeight: "bold", color: "#1f2937" },
   inputCard: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
   input: {
     flex: 1,
