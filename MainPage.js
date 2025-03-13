@@ -16,7 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react-native";
-import { supabase } from "./supabaseClient";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import Swipeable from "react-native-gesture-handler/Swipeable";
 
 const formatDate = (dateString) => {
@@ -32,13 +32,13 @@ const formatDate = (dateString) => {
 
 const MainPage = () => {
   const [expenses, setExpenses] = useState([]);
-  const [amount, setAmount] = useState(0);
+  const [amount, setAmount] = useState("");
   const [memo, setMemo] = useState("");
   const [tags, setTags] = useState([]);
   const [currentMonthDate, setCurrentMonthDate] = useState(new Date());
 
   const totalExpense = expenses.reduce(
-    (sum, expense) => sum + expense.amount,
+    (sum, expense) => sum + parseFloat(expense.amount),
     0
   );
   const tagOptions = ["식비", "교통비", "쇼핑", "문화생활", "기타"];
@@ -50,50 +50,76 @@ const MainPage = () => {
     currentMonthDate.getFullYear() === today.getFullYear() &&
     currentMonthDate.getMonth() === 0;
 
+  // 모든 지출 데이터 가져오기
+  const getAllExpenses = async () => {
+    try {
+      const expensesJson = await AsyncStorage.getItem("expenses");
+      return expensesJson ? JSON.parse(expensesJson) : [];
+    } catch (error) {
+      console.error("데이터 로드 실패:", error);
+      return [];
+    }
+  };
+
+  // 현재 월의 지출 데이터 가져오기
   const getCurrentMonthExpense = async () => {
-    try {
-      const year = currentMonthDate.getFullYear();
-      const month = currentMonthDate.getMonth();
-      const startOfMonth = new Date(year, month, 1).toISOString();
-      const startOfNextMonth = new Date(year, month + 1, 1).toISOString();
+    const allExpenses = await getAllExpenses();
+    const year = currentMonthDate.getFullYear();
+    const month = currentMonthDate.getMonth();
 
-      const { data, error } = await supabase
-        .from("expenditure")
-        .select("*")
-        .gte("created_at", startOfMonth)
-        .lt("created_at", startOfNextMonth);
+    // 현재 월에 해당하는 지출만 필터링
+    const monthlyExpenses = allExpenses.filter((expense) => {
+      const expenseDate = new Date(expense.created_at);
+      return (
+        expenseDate.getFullYear() === year && expenseDate.getMonth() === month
+      );
+    });
 
-      if (error) {
-        throw error;
-      }
+    // 날짜 내림차순으로 정렬
+    monthlyExpenses.sort(
+      (a, b) => new Date(b.created_at) - new Date(a.created_at)
+    );
 
-      setExpenses(data.reverse());
-    } catch (error) {
-      console.error("데이터 조회 실패:", error);
-    }
+    setExpenses(monthlyExpenses);
   };
 
+  // 지출 추가
   const addExpense = async () => {
-    try {
-      await supabase
-        .from("expenditure")
-        .insert([{ amount, memo, tags, created_at: new Date().toISOString() }]);
+    if (!amount) return;
 
-      setAmount(0);
-      setMemo("");
-      getCurrentMonthExpense();
-    } catch (error) {
-      console.error("지출 추가 실패:", error);
-    }
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount)) return;
+
+    const allExpenses = await getAllExpenses();
+    const newExpense = {
+      id: Date.now().toString(), // 고유 ID 생성
+      amount: parsedAmount,
+      memo: memo,
+      tags: tags,
+      created_at: new Date().toISOString(),
+    };
+
+    // 새 지출을 전체 목록에 추가
+    const updatedExpenses = [...allExpenses, newExpense];
+    await AsyncStorage.setItem("expenses", JSON.stringify(updatedExpenses));
+
+    // 폼 초기화
+    setAmount("");
+    setMemo("");
+    setTags([]);
+
+    // 현재 월 데이터 새로고침
+    getCurrentMonthExpense();
   };
 
+  // 지출 삭제
   const deleteExpense = async (expenseId) => {
-    try {
-      await supabase.from("expenditure").delete().eq("id", expenseId);
-      getCurrentMonthExpense();
-    } catch (error) {
-      console.error("지출 삭제 실패:", error);
-    }
+    const allExpenses = await getAllExpenses();
+    const updatedExpenses = allExpenses.filter(
+      (expense) => expense.id !== expenseId
+    );
+    await AsyncStorage.setItem("expenses", JSON.stringify(updatedExpenses));
+    getCurrentMonthExpense();
   };
 
   const renderRightActions = (expenseId) => {
@@ -117,6 +143,14 @@ const MainPage = () => {
     setCurrentMonthDate(
       (prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1)
     );
+  };
+
+  const toggleTag = (tagOption) => {
+    if (tags.includes(tagOption)) {
+      setTags(tags.filter((tag) => tag !== tagOption));
+    } else {
+      setTags([...tags, tagOption]);
+    }
   };
 
   // currentMonthDate가 바뀔 때마다 데이터를 새로 불러옴
@@ -178,25 +212,17 @@ const MainPage = () => {
             key={tagOption}
             style={[
               styles.tagButton,
-              tags.filter((tag) => tag === tagOption).length > 0 &&
-                styles.selectedTag,
+              tags.includes(tagOption) && styles.selectedTag,
             ]}
-            onPress={() => setTags([...tags, tagOption])}
+            onPress={() => toggleTag(tagOption)}
           >
             <Tag
               size={14}
-              color={
-                tags.filter((tag) => tag === tagOption).length > 0
-                  ? "#2563eb"
-                  : "#4b5563"
-              }
+              color={tags.includes(tagOption) ? "#2563eb" : "#4b5563"}
             />
             <Text
               style={{
-                color:
-                  tags.filter((tag) => tag === tagOption).length > 0
-                    ? "#2563eb"
-                    : "#4b5563",
+                color: tags.includes(tagOption) ? "#2563eb" : "#4b5563",
                 marginLeft: 4,
               }}
             >
@@ -224,23 +250,24 @@ const MainPage = () => {
                           {formatDate(item.created_at)}
                         </Text>
                       </View>
-                      <View style={[styles.tagContainer, { display: "block" }]}>
-                        {item.tags.map((tagOption) => (
-                          <View
-                            key={tagOption}
-                            style={[styles.tagButton, { marginLeft: 4 }]}
-                          >
-                            <Tag size={14} color="#4b5563" />
-                            <Text style={{ color: "#4b5563", marginLeft: 4 }}>
-                              {tagOption}
-                            </Text>
-                          </View>
-                        ))}
+                      <View style={styles.tagContainer}>
+                        {item.tags &&
+                          item.tags.map((tagOption) => (
+                            <View
+                              key={tagOption}
+                              style={[styles.tagButton, { marginRight: 4 }]}
+                            >
+                              <Tag size={14} color="#4b5563" />
+                              <Text style={{ color: "#4b5563", marginLeft: 4 }}>
+                                {tagOption}
+                              </Text>
+                            </View>
+                          ))}
                       </View>
                     </View>
                   </View>
                   <Text style={styles.expenseAmount}>
-                    {item.amount.toLocaleString()}₩
+                    {parseFloat(item.amount).toLocaleString()}₩
                   </Text>
                 </View>
               </Swipeable>
@@ -313,7 +340,6 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 8,
     marginBottom: 8,
-    marginTop: 8,
   },
   tagButton: {
     flexDirection: "row",
@@ -326,7 +352,7 @@ const styles = StyleSheet.create({
     backgroundColor: "red",
     justifyContent: "center",
     alignItems: "center",
-    width: 20,
+    width: 60,
     padding: 12,
     borderRadius: 8,
     marginBottom: 8,
