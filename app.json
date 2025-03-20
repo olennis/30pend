@@ -1,27 +1,27 @@
 {
   "expo": {
-    "name": "account-book",
-    "slug": "account-book",
+    "name": "30pend",
+    "slug": "30pend",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.rlaehdgns217.accountbook"
+      "bundleIdentifier": "com.rlaehdgns217.30pend"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.rlaehdgns217.accountbook"
+      "package": "com.rlaehdgns217.30pend"
     },
     "web": {
       "favicon": "./assets/favicon.png"

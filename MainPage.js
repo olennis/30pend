@@ -168,7 +168,7 @@ const MainPage = () => {
           >
             <ChevronLeft
               size={24}
-              color={disablePrevious ? "#d1d5db" : "#2563eb"}
+              color={disablePrevious ? "#d1d5db" : "#FFA726"}
             />
           </TouchableOpacity>
           <Text style={styles.summaryTitle}>
@@ -177,7 +177,7 @@ const MainPage = () => {
           <TouchableOpacity onPress={handleNextMonth} disabled={isCurrentMonth}>
             <ChevronRight
               size={24}
-              color={isCurrentMonth ? "#d1d5db" : "#2563eb"}
+              color={isCurrentMonth ? "#d1d5db" : "#FFA726"}
             />
           </TouchableOpacity>
         </View>
@@ -218,11 +218,11 @@ const MainPage = () => {
           >
             <Tag
               size={14}
-              color={tags.includes(tagOption) ? "#2563eb" : "#4b5563"}
+              color={tags.includes(tagOption) ? "#FFA726" : "#4b5563"}
             />
             <Text
               style={{
-                color: tags.includes(tagOption) ? "#2563eb" : "#4b5563",
+                color: tags.includes(tagOption) ? "#FFA726" : "#4b5563",
                 marginLeft: 4,
               }}
             >
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 8,
   },
-  monthChangeText: { color: "#2563eb", fontSize: 14 },
+  monthChangeText: { color: "#FFA726", fontSize: 14 },
   summaryTitle: { fontSize: 20, color: "#6b7280" },
   summaryAmount: { fontSize: 36, fontWeight: "bold", color: "#1f2937" },
   inputCard: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
   addButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#2563eb",
+    backgroundColor: "#FFA726",
     padding: 10,
     borderRadius: 6,
   },
@@ -359,7 +359,7 @@ const styles = StyleSheet.create({
   },
   selectedTag: {
     backgroundColor: "#dbeafe",
-    borderColor: "#2563eb",
+    borderColor: "#FFA726",
     borderWidth: 1,
   },
   expenseItem: {
